@@ -2,6 +2,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import *
 from .serializers import *
+from django.core.files.storage import FileSystemStorage
+fs = FileSystemStorage()
 
 @api_view(['GET'])
 def searchProduct(request):
@@ -86,12 +88,14 @@ def saleProducts(request):
         product = Product()
         codeProduct = Product.objects.all().count() + 1
         product.code = 'SP0' + str(codeProduct)
+        product.category = productGet.get('categoryId')
         product.name = productGet.get('name')
-        product.price = productGet.get('phone')
+        product.price = productGet.get('price')
         product.description = productGet.get('description')
-        product.image = productGet.get('image')
+        product.image = productGet.files.get('image')
         product.save()
-
+        saved_path = fs.save('static/' + product.image.name, product.image)
+        print(product.image)
         return Response({'success': True})
     except Exception as e:
         return Response({'success': False, 'error': str(e)})

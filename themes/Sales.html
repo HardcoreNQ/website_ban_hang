@@ -1,65 +1,75 @@
 <meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="js/main.js"></script>
+
 <link rel="stylesheet" href="css/bootstrap.css">
 <link rel="stylesheet" href="css/main.css">
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
-<div class='container pt-3'>
-  <form method="POST" novalidate>
-    <h4>Bán hàng trực tuyến</h4>
-    <table class="table table-form">
-      <tr>
-        <th colspan="2">
-          <h5>Thông tin sản phẩm</h4>
-        </th>
-      </tr>
-      <tr>
-        <th>Sản phẩm:</th>
-        <td>
-          <img src="images/ASUS_0008.jpg" style="max-height: 100px;">
-          <br>
-          <span><input type="text" class="form-cotrol" v-model="product.image"></span>
+
+<div id="app">
+  <div class='container pt-3'>
+    <form method="POST" novalidate>
+      <h4>Bán hàng trực tuyến</h4>
+      <table class="table table-form">
+        <tr>
+          <th colspan="2">
+            <h5>Thông tin sản phẩm</h4>
+          </th>
+        </tr>
+        <tr>
+          <th>Sản phẩm:</th>
+          <td>
+            <p>Ảnh sản phẩm</p>
+            <br>
+            <span><input type="file" class="form-cotrol" v-model="product.image"></span>
+          </td>
+        </tr>
+        <tr>
+          <th>Loại sản phẩm:</th>
+          <td>
+            <select v-model="product.categoryId" class="form-control">
+            <option value="">Tất cả</option>
+            <option v-for="c in categoryList" :value="c.id">
+              {{c.name}}
+            </option>
+          </select>
         </td>
-      </tr>
-      <tr>
-        <th>Tên sản phẩm:</th>
-        <td><input type="text" class="form-control" v-model="product.name"></td>
-      </tr><tr>
-        <th>Giá:</th>
-        <td><input type="text" class="form-control" v-model="product.price"></td>
-      </tr>
-      <tr>
-        <th>Description:</th>
-        <td><input type="text" class="form-control" v-model="product.description"></td>
-      </tr>
-    </table>
-    <button type="button" v-on:click="confirm()" class="btn btn-primary">Đăng bán</button>
-  </form>
+        </tr>
+        <tr>
+          <th>Tên sản phẩm:</th>
+          <td><input type="text" class="form-control" v-model="product.name"></td>
+        </tr>
+        <tr>
+          <th>Giá:</th>
+          <td><input type="text" class="form-control" v-model="product.price"></td>
+        </tr>
+        <tr>
+          <th>Description:</th>
+          <td><input type="text" class="form-control" v-model="product.description"></td>
+        </tr>
+      </table>
+      <button type="button" v-on:click="confirm()" class="btn btn-primary">Đăng bán</button>
+    </form>
+  </div>
 </div>
-
 <script>
   new Vue({
     el:'#app',
     data: {
+      categoryList:[],
       product: {
-        catagory: '', name:'', price: '', description:'', image:''
+        categoryId: '', name:'', price: '', description:'', image:''
       },
       total: '',
-      baseURL:'http://127.0.0.1:8000/api',
+      baseURL:'http://127.0.0.1:8000/api'
     },
     
     methods: {
       confirm: async function(){
-        var item = this.product.map(product => ({
-          catagory: product.catagory,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          image: product.image
-        }));
         var body = {product: this.product};
         console.log(JSON.stringify(body));
         var result = await this.post('/sale_products', body);
+        console.log(JSON.stringify(result));
         if(result.success){
           location.href = 'index.html';
         }else{
@@ -67,5 +77,11 @@
         }
       }
     },
-  })
+    created: async function(){
+      var reps = await fetch(this.baseURL + '/get_category_list');
+      var result = reps.json();
+      console.log(result);
+      this.categoryList = result.categoryList;  
+    }
+  });
 </script>
