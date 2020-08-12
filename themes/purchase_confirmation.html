@@ -1,0 +1,100 @@
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="js/main.js"></script>
+<link rel="stylesheet" href="css/bootstrap.css">
+<link rel="stylesheet" href="css/main.css">
+
+<div id="app" class='container pt-3'>
+  <form method="POST" novalidate>
+    <h4>Đặt mua hàng trực tuyến</h4>
+    <table class="table table-form">
+      <tr>
+        <th colspan="2">
+          <h5>Thông tin sản phẩm</h4>
+        </th>
+      </tr>
+      <tr>
+        <td colspan="2">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Ten</th>
+              <th>So luong</th>
+              <th>Don gia</th>
+              <th>Tong</th>
+            </tr>
+          </thead>
+          <body>
+            <tr v-for="item in items">
+              <td>{{item.product.name}}</td>
+              <td>{{item.qty}}</td>
+              <td>{{item.product.price}}</td>
+              <td>{{item.qty * item.product.price}}</td>
+            </tr>
+          </body>
+        </table>
+      </td>
+      </tr>
+      <tr>
+        <th>Giá:</th>
+        <td>{{total}} ₫</td>
+      </tr>
+
+      <tr>
+        <th colspan="2">
+          <h5>Thông tin người mua hàng</h4>
+        </th>
+      </tr>
+      <tr>
+		<th>Họ và tên:</th>
+		<td>{{customer.fullname}}</td>
+	  </tr>
+	  <tr>
+		<th>Số điện thoại:</th>
+		<td>{{customer.phone}}</td>
+	  </tr>
+	  <tr>
+		<th>Địa chỉ:</th>
+		<td>{{customer.address}}</td>
+	  </tr>
+    </table>
+    <button type="button" v-on:click="confirm()" class="btn btn-primary">Xac nhan</button>
+  </form>
+</div>
+
+<script>
+  new Vue({
+    el:'#app',
+    data: {
+      items: [], customer: {
+        fullname: '', address:'', phone: ''
+      },
+      total: '',
+      baseURL:'http://127.0.0.1:8000/api',
+    },
+    created: function(){
+      this.items = JSON.parse(localStorage.getItem('itemList'));
+      this.customer = JSON.parse(localStorage.getItem('customer'));
+      this.total = localStorage.getItem('total');
+    },
+    methods: {
+      confirm: async function(){
+        var items = this.items.map(item => ({
+          qty: item.qty,
+          price: item.product.price,
+          productId: item.product.id,
+        }));
+        var body = {customer: this.customer, items: items};
+        console.log(JSON.stringify(body));
+        var result = await this.post('/order_products', body);
+        if(result.success){
+          localStorage.removeItem('total');
+          localStorage.removeItem('itemList');
+          location.href = 'thank_you.html';
+        }else{
+          alert(result.error);
+        }
+      }
+    },
+  })
+</script>

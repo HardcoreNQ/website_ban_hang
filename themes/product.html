@@ -1,0 +1,77 @@
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="js/main.js"></script>
+<link rel="stylesheet" href="css/bootstrap.css">
+<link rel="stylesheet" href="css/main.css">
+
+
+<div id="app">
+  <div class="bg-primary">
+    <div class="container">
+      <nav class="navbar navbar-expand navbar-dark bg-primary p-0">
+        <ul class="navbar-nav">
+          <li class="nav-item active">
+            <a class="nav-link" href="index.html">Sản phẩm</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Liên hệ</a>
+          </li>
+        </ul>
+
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="cart.html">Giỏ hàng : {{total}} ₫</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class='container'>
+    <div class="row">
+      <div class="col-6">
+        <image class='product-detail-image' :src="`http://localhost:8000/${product.image}`">
+      </div>
+
+      <div class="col-6 mt-5">
+        <div class='product-detail-title'>{{product.name}}</div>
+        <br>
+        <table class="table">
+          <tr>
+            <td>Nhóm sản phẩm: {{ product.categoryName }}</td>
+            <td></td>
+          </tr>          
+          <tr>
+            <td>Giá bán:</td>
+            <td><b>{{product.price}} ₫</b></td>
+          </tr>
+        </table>
+        <br>
+        <a class="btn btn-secondary" href="index.html">Quay lại</a>
+        <a class="btn btn-primary" :href="`cart.html?id=${product.id}`">Thêm vào giỏ hàng</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  new Vue({
+    el: '#app',
+    data: {
+      baseURL: 'http://localhost:8000/api',
+      product: {},
+      total: '',
+    },
+    created: async function() {
+      var currentURL = location.href;
+      var token = '?id=';
+      var pos = currentURL.lastIndexOf(token);
+      if(pos >= 0) {
+        var id = currentURL.substring(pos + token.length);
+        var result = await this.get('/product_detail/' + id);
+        this.product = result.product;       
+      }
+      this.total = localStorage.getItem('total');
+    }
+  })
+</script>
