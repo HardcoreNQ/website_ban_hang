@@ -1,9 +1,43 @@
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from .models import *
 from .serializers import *
 from django.core.files.storage import FileSystemStorage
 fs = FileSystemStorage()
+
+@api_view(['POST'])
+def signup(request):
+    phone = request.data.get('phone')
+    username = request.data.get('username', '')
+    password = request.data.get('password', '')
+    password2 = request.data.get('password2', '')
+
+    errors = {}
+
+    if username == '':
+        errors['username'] = 'Tên đăng nhập không được trống'
+
+    if User.objects.filter(username=username):
+        errors['username'] = 'Tài khoản đã tồn tại'
+    
+    if phone == '':
+        errors['phone'] = 'Số điện thoại không được trống'
+
+    if len(password) < 6:
+        errors['password'] = 'Mật khẩu phải có độ dài tổi thiểu 6 kí tự'
+
+    if password.isdigit():
+        errors['password'] = 'Mật khẩu không thể chứa toàn chữ số'
+
+    if password2 != password:
+        errors['password2'] = 'Mật khẩu xác thực không đúng'
+    
+    if len(errors) == 0:
+        user = User.objects.create_user(username=username, password=password)
+        return Response({'success' : True})
+    
+    return Response({'success' : False, 'errors': errors})
 
 @api_view(['GET'])
 def searchProduct(request):
@@ -80,22 +114,43 @@ def findProducts(productName, categoryId, priceRange):
         productList = productList.filter(category__id=categoryId)
     return productList
 
+def validateSaleProduct(data):
+  
+    errors = {}
+    if not data.get('categoryId'):
+        errors['categoryId'] = "Bạn phải chọn loại sản phẩm"
+
+    if not data.get("name"):
+        errors['name'] = "Bạn phải chọn tên sản phẩm"
+
+    if not data.get("price", "").isdigit():
+        errors['price'] = "Giá sản phẩm không hợp lệ"
+    
+    if not data.get('image'):
+        errors['image'] = "Bạn phải chọn ảnh sản phẩm"
+
+    return errors
+
 @api_view(['POST'])
+@permission_classes((IsAuthenticated,))
 def saleProducts(request):
     try:
-        productGet = request.data.get('product', {})
+        data = request.data
+        errors = validateSaleProduct(data)
+        if len(errors) > 0:
+            return Response({'success': False, 'errors': errors})
 
         product = Product()
         codeProduct = Product.objects.all().count() + 1
         product.code = 'SP0' + str(codeProduct)
-        product.category = productGet.get('categoryId')
-        product.name = productGet.get('name')
-        product.price = productGet.get('price')
-        product.description = productGet.get('description')
-        product.image = productGet.files.get('image')
+        product.category = Category(id=data.get('categoryId'))
+        product.name = data.get('name')
+        product.price = data.get('price')
+        product.description = data.get('description')
+        product.image = data.get('image')
+        product.postUser = request.user
         product.save()
-        saved_path = fs.save('static/' + product.image.name, product.image)
-        print(product.image)
+    
         return Response({'success': True})
     except Exception as e:
-        return Response({'success': False, 'error': str(e)})
+        return Response({'success': False, 'errors': {'all': str(e)}})

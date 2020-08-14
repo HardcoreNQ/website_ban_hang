@@ -5,116 +5,122 @@
 <link rel="stylesheet" href="css/bootstrap.css">
 <link rel="stylesheet" href="css/main.css">
 
-<div id="app">  
-  <div class="bg-primary">
-    <div class="container">
-      <nav class="navbar navbar-expand navbar-dark bg-primary p-0">
-        <ul class="navbar-nav">
-          <li class="nav-item active">
-            <a class="nav-link" href="index.html">Sản phẩm</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Liên hệ</a>
-          </li>
-        </ul>
+<div id="app">
+  <template>
+    <div class="bg-primary">
+      <div class="container">
+        <nav class="navbar navbar-expand navbar-dark bg-primary p-0">
+          <ul class="navbar-nav">
+            <li class="nav-item active">
+              <a class="nav-link" href="index.html">Mua hàng</a>
+            </li>
+            <li v-if="token" class="nav-item">
+              <a class="nav-link" href="sales.html">Đăng sản phẩm</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Liên hệ</a>
+            </li>
+          </ul>
 
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item active">
-            <a v-if="total" class="nav-link" href="cart.html">Giỏ hàng : {{total}} ₫</a>
-          </li>
-        </ul>
-      </nav>
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a v-if="total" class="nav-link" href="cart.html">Giỏ hàng : {{total}} ₫</a>              
+            </li>
+            <li v-if="token" class="nav-item active">
+              <a class="nav-link" href="#" v-on:click="logOut()">Đăng xuất</a>
+            </li>
+            <li v-if="!token" class="nav-item active">
+              <a class="nav-link" href="/login.html">Đăng nhập</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </div>
-  </div>
 
-  <div class="container mt-5">
-    <div class="row">
-      <div class="col-9">
-        <div style='display:none'>
-          <label class='label-title'>Không tìm thấy sản phẩm</label>
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-9">
+          <div style='display:none'>
+            <label class='label-title'>Không tìm thấy sản phẩm</label>
+          </div>
+          <ul class="list-unstyled row">
+            <li v-for="p in productList" class="list-item col-sm-4 mt-3">
+              <div class='item-container'>
+                <a :href="`product.html?id=${p.id}`" class='product-item'>
+                  <img :src="`http://localhost:8000/${p.image}`" class='product-image'>
+                  <div class="item-info">
+                    <div>
+                      <span class='product-name'>{{p.name}}</span>
+                    </div>
+                    <div>
+                      <span class='price-title'>Giá bán :</span>
+                      <span class='price'>{{p.price}} ₫</span>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </li>
+          </ul>
         </div>
-        <ul class="list-unstyled row">
-          <li v-for="p in productList" class="list-item col-sm-4 mt-3">
-            <div class='item-container'>
-              <a :href="`product.html?id=${p.id}`" class='product-item'>
-                <img :src="`http://localhost:8000/${p.image}`" class='product-image'>
-                <div class="item-info">
-                  <div>
-                    <span class='product-name'>{{p.name}}</span>
-                  </div>
-                  <div>
-                    <span class='price-title'>Giá bán :</span>
-                    <span class='price'>{{p.price}} ₫</span>
-                  </div>
-                </div>
-              </a>
+        <div class="col-3">
+          <form @submit.prevent="searchProduct()">
+            <div class="mt-5">
+              <label class='label-title'>Tên sản phẩm</label>
+              <input v-model="productName" class="form-control" placeholder="Nhập tên sản phẩm">
             </div>
-          </li>
-        </ul>
-      </div>
-      <div class="col-3">
-        <form @submit.prevent="searchProduct()">
-          <div class="mt-5">
-            <label class='label-title'>Tên sản phẩm</label>
-            <input v-model="productName" class="form-control" placeholder="Nhập tên sản phẩm">
-          </div>
-          <div class="mt-4">
-            <label class='label-title'>Nhóm sản phẩm</label>
-            <select v-model="categoryId" class="form-control">
-              <option value="">Tất cả</option>
-              <option v-for="c in categoryList" :value="c.id">
-                {{c.name}}
-              </option>
-            </select>
-          </div>
-          <div class="mt-4">
-            <label class='label-title'>Mức giá</label>
-            <select v-model="priceRange" class="form-control">
-              <option value="">Tất cả</option>
-              <option value="1">Dưới 10 triệu</option>
-              <option value="2">Từ 10 đến 15 triệu</option>
-              <option value="3">Từ 15 đến 20 triệu</option>
-              <option value="4">Trên 20 triệu</option>
-            </select>
-          </div>
-          <br>
-          <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-        </form>
+            <div class="mt-4">
+              <label class='label-title'>Nhóm sản phẩm</label>
+              <select v-model="categoryId" class="form-control">
+                <option value="">Tất cả</option>
+                <option v-for="c in categoryList" :value="c.id">
+                  {{c.name}}
+                </option>
+              </select>
+            </div>
+            <div class="mt-4">
+              <label class='label-title'>Mức giá</label>
+              <select v-model="priceRange" class="form-control">
+                <option value="">Tất cả</option>
+                <option value="1">Dưới 10 triệu</option>
+                <option value="2">Từ 10 đến 15 triệu</option>
+                <option value="3">Từ 15 đến 20 triệu</option>
+                <option value="4">Trên 20 triệu</option>
+              </select>
+            </div>
+            <br>
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
+  </template>
 </div>
 <script>
   new Vue({
     el: '#app',
-    data :{
+    data: {
       productList: [],
-      categoryList:[],
-      API_URL : 'http://localhost:8000/api',
+      categoryList: [],
       productName: '',
-      categoryId:'',
-      priceRange:'',
+      categoryId: '',
+      priceRange: '',
       total: '',
     },
     methods: {
-      get: async function(uri) {
-        console.log(this.API_URL + uri);
-        var resp = await fetch(this.API_URL + uri);
-        return resp.json();
-      },
-      searchProduct: async function() {
+
+      searchProduct: async function () {
         var uri = `/search_product?product_name=${this.productName}`
-                        + `&category_id=${this.categoryId}`
-                        + `&price_range=${this.priceRange}`;
+          + `&category_id=${this.categoryId}`
+          + `&price_range=${this.priceRange}`;
         var result = await this.get(uri);
         this.productList = result.productList;
       }
     },
-    created: async function() {
+    created: async function () {
       var result = await this.get('/search_product');
-      this.productList = result.productList;      
+      this.productList = result.productList;
       result = await this.get('/get_category_list');
-      this.categoryList = result.categoryList;     
+      this.categoryList = result.categoryList;
       this.total = localStorage.getItem('total');
     }
   });

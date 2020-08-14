@@ -1,5 +1,7 @@
 <meta charset="UTF-8">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.css">
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="js/main.js"></script>
 
 <style>
   .bg-signup {
@@ -19,33 +21,66 @@
     padding: 20px;
     margin: 100 auto 0 auto;
   }
-
 </style>
 
 <body class="bg-signup">
-  <div class="signup-form">
-    <h3>Đăng ký tài khoản</h3>
-    <br>
-    <form method="POST">
-      <div class="form-group">
-        <label>Tên tài khoản</label>
-        <input name="username" type="text" class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Mật khẩu</label>
-        <input name="password1" type="password" class="form-control" />
-      </div>
-      <div class="form-group">
-        <label>Mật khẩu xác thực</label>
-        <input name="password2" type="password" class="form-control" />
-      </div>
-      <div class="form-group">
-        <span id="error" style="color:red"></span>
-      </div>
+  <div id="app" class="signup-form">
+    <template>
+      <h3>Đăng ký tài khoản</h3>
       <br>
-      <div class="form-group">
-        <button type="submit" class="btn btn-primary btn-block">Đăng ký</button>
-      </div>
-    </form>
+      <form id="fmt" @submit.prevent="signup()">
+        <div class="form-group">
+          <label>Tên tài khoản</label>
+          <input name="username" type="text" class="form-control" />
+          <div class="mt-2"><small style="color: red;">{{errors.username}}</small></div>
+        </div>
+        <div class="form-group">
+          <label>Số điện thoại</label>
+          <input name="phone" type="text" class="form-control" />
+          <div class="mt-2"><small style="color: red;">{{errors.phone}}</small></div>
+        </div>
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <input name="password" type="password" class="form-control" />
+          <div class="mt-2"><small style="color: red;">{{errors.password}}</small></div>
+        </div>
+        <div class="form-group">
+          <label>Mật khẩu xác thực</label>
+          <input name="password2" type="password" class="form-control" />
+          <div class="mt-2"><small style="color: red;">{{errors.password2}}</small></div>
+        </div>
+        <div class="form-group">
+          <span id="error" style="color:red"></span>
+        </div>
+        <br>
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary btn-block">Đăng ký</button>
+        </div>
+        <p class="text-center"><a href="login.html">Đăng nhập</a></p>
+      </form>
+    </template>
   </div>
 </body>
+
+<script>
+  new Vue({
+    el: '#app',
+    data: {
+      errors : {}
+    },
+    methods: {
+      signup: async function() {
+        this.errors = {};
+        var data = new FormData(document.getElementById('fmt'));
+        var result = await this.post('/signup', data, true);
+        if(result.success) {
+          var result = await this.post('/token', data, true);
+          localStorage.setItem('token', result.access);
+          location.href = '/';
+        }else {
+          this.errors = result.errors;
+        }
+      }
+    }
+  })
+</script>

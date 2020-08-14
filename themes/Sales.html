@@ -7,81 +7,117 @@
 
 
 <div id="app">
-  <div class='container pt-3'>
-    <form method="POST" novalidate>
-      <h4>Bán hàng trực tuyến</h4>
-      <table class="table table-form">
-        <tr>
-          <th colspan="2">
-            <h5>Thông tin sản phẩm</h4>
-          </th>
-        </tr>
-        <tr>
-          <th>Sản phẩm:</th>
-          <td>
-            <p>Ảnh sản phẩm</p>
-            <br>
-            <span><input type="file" class="form-cotrol" v-model="product.image"></span>
-          </td>
-        </tr>
-        <tr>
-          <th>Loại sản phẩm:</th>
-          <td>
-            <select v-model="product.categoryId" class="form-control">
-            <option value="">Tất cả</option>
-            <option v-for="c in categoryList" :value="c.id">
-              {{c.name}}
-            </option>
-          </select>
-        </td>
-        </tr>
-        <tr>
-          <th>Tên sản phẩm:</th>
-          <td><input type="text" class="form-control" v-model="product.name"></td>
-        </tr>
-        <tr>
-          <th>Giá:</th>
-          <td><input type="text" class="form-control" v-model="product.price"></td>
-        </tr>
-        <tr>
-          <th>Description:</th>
-          <td><input type="text" class="form-control" v-model="product.description"></td>
-        </tr>
-      </table>
-      <button type="button" v-on:click="confirm()" class="btn btn-primary">Đăng bán</button>
-    </form>
-  </div>
+  <template>
+    <div class="bg-primary">
+      <div class="container">
+        <nav class="navbar navbar-expand navbar-dark bg-primary p-0">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Mua hàng</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="sales.html">Đăng sản phẩm</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Liên hệ</a>
+            </li>
+          </ul>
+
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a v-if="total" class="nav-link" href="cart.html">Giỏ hàng : {{total}} ₫</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <div class='container pt-3'>
+      <form id="fmt" @submit.prevent="save()">
+        <h4>Bán hàng trực tuyến</h4>
+        <table class="table table-form">
+          <tr>
+            <th colspan="2">
+              <h5>Thông tin sản phẩm</h4>
+            </th>
+          </tr>
+          <tr>
+            <th>Sản phẩm:</th>
+            <td>
+              <p>Ảnh sản phẩm</p>
+              <br>
+              <span><input type="file" class="form-cotrol" name="image"></span>
+              <br>
+              <div class="mt-2"><small style="color: red;">{{errors.image}}</small></div>
+            </td>
+          </tr>
+          <tr>
+            <th>Loại sản phẩm:</th>
+            <td>
+              <select name="categoryId" class="form-control">
+                <option value="">---Chọn loại sản phẩm---</option>
+                <option v-for="c in categoryList" :value="c.id">
+                  {{c.name}}
+                </option>
+              </select>
+              <div class="mt-2"><small style="color: red;">{{errors.categoryId}}</small></div>
+            </td>
+          </tr>
+          <tr>
+            <th>Tên sản phẩm:</th>
+            <td>
+              <input name="name" type="text" class="form-control">
+              <div class="mt-2"><small style="color: red;">{{errors.name}}</small></div>
+            </td>
+          </tr>
+          <tr>
+            <th>Giá:</th>
+            <td>
+              <input name="price" type="text" class="form-control">
+              <div class="mt-2"><small style="color: red;">{{errors.price}}</small></div>
+            </td>
+          </tr>
+          <tr>
+            <th>Description:</th>
+            <td><input name="description" type="text" class="form-control"></td>
+          </tr>
+        </table>
+        <button type="submit" class="btn btn-primary">Đăng bán</button>
+      </form>
+    </div>
+  </template>
 </div>
 <script>
   new Vue({
-    el:'#app',
+    el: '#app',
     data: {
-      categoryList:[],
-      product: {
-        categoryId: '', name:'', price: '', description:'', image:''
-      },
-      total: '',
-      baseURL:'http://127.0.0.1:8000/api'
+      categoryList: [],
+      errors: {},
     },
-    
+
     methods: {
-      confirm: async function(){
-        var body = {product: this.product};
-        console.log(JSON.stringify(body));
-        var result = await this.post('/sale_products', body);
+      save: async function () {
+        this.errors = {};
+
+        var data = new FormData(document.getElementById("fmt"));
+        /*for (var pair of data.entries()) {
+          console.log(pair[0] + ', ' + pair[1]);
+        }*/
+
+        var result = await this.post('/sale_products', data, true);
         console.log(JSON.stringify(result));
-        if(result.success){
+        if (result.success) {
           location.href = 'index.html';
-        }else{
-          alert(result.error);
+        } else {
+          this.errors = result.errors || {};
         }
       }
     },
-    created: async function(){
+    created: async function () {
       var reps = await fetch(this.baseURL + '/get_category_list');
-      var result = reps.json();
+      var result = await reps.json();
       console.log(result);
-      this.categoryList = result.categoryList;  
+      this.categoryList = result.categoryList;
     }
   });
 </script>
